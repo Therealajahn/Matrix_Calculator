@@ -106,13 +106,12 @@
 	const sizeInput = document.querySelector('size-input');
 	const inputMatrix = document.querySelector('input-matrix');
 	const pageOne = document.querySelector('page-one');
-	const target = [
-		'sizeInput',
-		'inputMatrixOne',
-		'inputMatrixTwo',
-		'outputMatrix',
-	];
-	let targetIndex = 0;
+
+	//TARGETS
+	//	'sizeInput',
+	//	'inputMatrixOne',
+	//	'inputMatrixTwo',
+	//	'outputMatrix',
 
 	let STATE = {
 		input:{
@@ -132,21 +131,16 @@
 			'output':[],
 			updated:false,
 		},
+		target:'sizeInput',
 	}
 
 	document.addEventListener('keydown',event => {
-		if(event.key === 'Enter'){
-				targetIndex += 1;
-				console.log('targetIndex',targetIndex);
-		};
 
-		if(!+event.key)return;
+		console.log('current target: ',STATE.target);
 
-		console.log('current target: ',target[targetIndex]);
-		switch(target[targetIndex]){
+		switch(STATE.target){
 			case 'sizeInput':
-				console.log('update size case');
-				updateSizeInput(event);
+				updateSizeInput(event,'one');
 				break;
 			case 'inputMatrixOne':
 				updateInputMatrix(event,'input-one');
@@ -161,13 +155,17 @@
 	});
 
 	function updateSizeInput(event){
+		console.log('size');
+		if(!+event.key)return;
 		let { type, count, whichMatrix } = STATE.input;
 		update(event.key);
 		if(count === 0){
 			update('x');
-			console.log('count up 1?',count);
+			console.log('count up 0?',count);
+			STATE.pauseIndex = true;
 		}
 		function update(input){
+			//if(event.key === 'Enter')return;
 			const dimension = document.createElement('dimension');
 			dimension.innerHTML = input;
 			sizeInput.appendChild(dimension);
@@ -177,10 +175,28 @@
 		}
 		if(count === 1){
 			createInputMatrix(type,whichMatrix);
+			console.log('count up 1?',count);
+			STATE.input.whichMatrix += 1;
 		}
-		if(count === 0){
+		if(count === 2){
+			createInputMatrix(type,whichMatrix);
+			sizeInput.innerHTML = '';
+			console.log('count up 2',count);
+		}
+		if(count === 3){
+			update(event.key);
+			console.log('count up 3',count)
+		}
+		if(count === 4){
+			update('x');
+			console.log('count up 4',count)
+		}
+		if(count === 5){
+			update(event.key);
+			console.log('count up 5',count)
+		}
+		if(event.key){
 			STATE.input.count += 1;
-			console.log('count up 2?',count);
 		}
 	}
 
