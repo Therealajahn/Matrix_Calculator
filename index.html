@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title></title>
+
+		<style>
+
+			*{
+				margin: 0;
+				padding: 0;
+			}		
+			page-one{
+				width: 100vw;
+				height: 100vh;
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				grid-template-rows: 1fr 1fr 6fr 6fr; 				
+				grid-template-areas:
+					"label label"
+					"size size"
+					"input-one input-two"
+					"output output";
+			}
+
+			what-size{
+				display:grid;
+				grid-area:label;
+			}
+			size-input{
+				width: 50vw;
+				height: 10vw;
+				background: #a3a3a3;
+				display: grid;
+				border:1vw solid black;
+				grid-area:size;
+				justify-self:center;
+				grid-template-rows: 1fr;
+				grid-template-columns: 1fr 1fr 1fr;
+			}
+			dimension{
+				width: 6vw;
+				height: 6vw;
+				border:1vw solid black;
+			}
+
+			input-matrix{
+				width:50vw;
+				height:50vw;
+				background: #a3a3a3;
+				display: grid;
+				border:1vw solid black;
+				/*
+				grid-template-rows: 1fr 1fr;
+				grid-template-columns: 1fr 1fr;
+				*/
+			}
+			.input-one{
+				grid-area: input-one;
+			}
+			.input-two{
+				grid-area: input-two;
+			}
+			value{
+				justify-self: center;
+				align-self: center;
+				width:50%;
+				height:50%;
+				border:1vw solid black;
+			}
+			output-matrix{
+				width:50vw;
+				height:50vw;
+				background: #a3a3a3;
+				display: grid;
+				border:1vw solid black;
+				id-template-rows: 1fr 1fr;
+				grid-template-columns: 1fr 1fr;
+				grid-area: output;
+				justify-self: center;
+			}
+			.highlight{
+				border:1vw solid white;
+			}
+
+		</style>
+
+	</head>
+	
+	<body>
+		<page-one>
+			<what-size>
+				What size matrix?:
+			</what-size>
+			<size-input></size-input>
+			<!--
+			<input-matrix class='input-one'></input-matrix>
+			<input-matrix class='input-two'></input-matrix>
+			<output-matrix class='output'></output-matrix>
+		</page-one>
+-->
+	</body>
+  <script>
+
+	const sizeInput = document.querySelector('size-input');
+	const inputMatrix = document.querySelector('input-matrix');
+	const pageOne = document.querySelector('page-one');
+	const target = [
+		'sizeInput',
+		'inputMatrixOne',
+		'inputMatrixTwo',
+		'outputMatrix',
+	];
+	let targetIndex = 0;
+
+	let STATE = {
+		input:{
+			type:['input-one','input-two'],
+			count:0,
+			whichMatrix:0,
+		},
+		inputMatrix: {
+			columns:0,
+			rows:0,
+			'input-one':[],
+			'input-two':[],
+		},
+		outputMatrix: {
+			columns:0,
+			rows:0,
+			'output':[],
+			updated:false,
+		},
+	}
+
+	document.addEventListener('keydown',event => {
+		if(event.key === 'Enter'){
+				targetIndex += 1;
+				console.log('targetIndex',targetIndex);
+		};
+
+		if(!+event.key)return;
+
+		console.log('current target: ',target[targetIndex]);
+		switch(target[targetIndex]){
+			case 'sizeInput':
+				console.log('update size case');
+				updateSizeInput(event);
+				break;
+			case 'inputMatrixOne':
+				updateInputMatrix(event,'input-one');
+				break;
+			case 'inputMatrixTwo':
+				updateInputMatrix(event,'input-two');
+				break;
+			case 'outputMatrix':
+				updateOutputMatrix();
+				break;
+		}
+	});
+
+	function updateSizeInput(event){
+		let { type, count, whichMatrix } = STATE.input;
+		update(event.key);
+		if(count === 0){
+			update('x');
+			console.log('count up 1?',count);
+		}
+		function update(input){
+			const dimension = document.createElement('dimension');
+			dimension.innerHTML = input;
+			sizeInput.appendChild(dimension);
+			if(input === 'x')return;
+			STATE.inputMatrix[count ? 'rows' : 'columns'] = input;
+			console.log('inputMatrix',STATE.inputMatrix);
+		}
+		if(count === 1){
+			createInputMatrix(type,whichMatrix);
+		}
+		if(count === 0){
+			STATE.input.count += 1;
+			console.log('count up 2?',count);
+		}
+	}
+
+	function createInputMatrix(type,whichMatrix){
+		const { columns, rows } = STATE.inputMatrix;
+		const inputMatrix = document.createElement('input-matrix');
+		inputMatrix.setAttribute('class', type[whichMatrix]);
+		inputMatrix.style.gridTemplateRows = `repeat(${rows},1fr)`
+		inputMatrix.style.gridTemplateColumns = `repeat(${columns},1fr)`
+		pageOne.appendChild(inputMatrix);
+	}
+
+	function updateInputMatrix(event,whichInput){
+		console.log("STATE: ",STATE);
+    const matrixArray = STATE.inputMatrix[whichInput];
+		const value = document.createElement('value');
+
+		if(event.key === "Enter")return;
+		if(matrixArray.length >= 4)return;
+		console.log('event key:',event.key);
+
+		value.innerHTML = event.key;
+		matrixArray.push(+event.key);
+		document.getElementsByClassName(whichInput)[0]
+		.appendChild(value);
+	}
+
+	function updateSizeOutput(){
+		return;
+	}
+	function updateOutputMatrix(){
+		//[1,3,5,4]
+		addMatrices();
+	}
+	function addMatrices(){
+		const {inputMatrix,outputMatrix} = STATE;
+		for(let i = 0; i < 4; i++){
+			const sum = inputMatrix['input-one'][i] +	
+					inputMatrix['input-two'][i];
+			const value = document.createElement('value');
+			value.innerHTML = sum;
+			outputMatrix['output'].push(sum);
+			document.getElementsByClassName('output')[0]
+			.appendChild(value);
+		}	
+		outputMatrix.updated = true;
+	}
+
+  </script>
+</html>
