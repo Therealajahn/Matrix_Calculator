@@ -143,6 +143,7 @@
 				updateSizeInput(event,'one');
 				break;
 			case 'inputMatrixOne':
+				console.log('this is runinng');
 				updateInputMatrix(event,'input-one');
 				break;
 			case 'inputMatrixTwo':
@@ -177,24 +178,25 @@
 			createInputMatrix(type,whichMatrix);
 			console.log('count up 1?',count);
 			STATE.input.whichMatrix += 1;
+			STATE.target = 'inputMatrixOne';
 		}
 		if(count === 2){
 			createInputMatrix(type,whichMatrix);
 			sizeInput.innerHTML = '';
 			console.log('count up 2',count);
 		}
-		if(count === 3){
-			update(event.key);
-			console.log('count up 3',count)
-		}
-		if(count === 4){
-			update('x');
-			console.log('count up 4',count)
-		}
-		if(count === 5){
-			update(event.key);
-			console.log('count up 5',count)
-		}
+	//	if(count === 3){
+	//		update(event.key);
+	//		console.log('count up 3',count)
+	//	}
+	//	if(count === 4){
+	//		update('x');
+	//		console.log('count up 4',count)
+	//	}
+	//	if(count === 5){
+	//		update(event.key);
+	//		console.log('count up 5',count)
+	//	}
 		if(event.key){
 			STATE.input.count += 1;
 		}
@@ -210,12 +212,14 @@
 	}
 
 	function updateInputMatrix(event,whichInput){
-		console.log("STATE: ",STATE);
+		const { columns, rows } = STATE.inputMatrix;
+		console.log('updateInputMatrix');
     const matrixArray = STATE.inputMatrix[whichInput];
 		const value = document.createElement('value');
 
-		if(event.key === "Enter")return;
-		if(matrixArray.length >= 4)return;
+		if(event.key === "Enter")return;	
+	
+		if(matrixArray.length >= +columns * +rows) return;
 		console.log('event key:',event.key);
 
 		value.innerHTML = event.key;
@@ -225,7 +229,6 @@
 	}
 
 	function updateSizeOutput(){
-		return;
 	}
 	function updateOutputMatrix(){
 		//[1,3,5,4]
