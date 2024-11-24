@@ -21,6 +21,7 @@
 					"label label"
 					"size size"
 					"input-one input-two"
+					"operation operation"
 					"output output";
 			}
 
@@ -83,7 +84,25 @@
 			.highlight{
 				border:1vw solid white;
 			}
-
+			operation-area{
+				grid-area: operation;
+				width:100%;
+				height:100%;
+				display: grid;
+			}
+			operation-input{
+				width: 50vw;
+				height: 10vw;
+				background: #a3a3a3;
+				display: grid;
+				border:1vw solid black;
+				justify-self:center;
+				align-self:center;
+			}
+			operator{
+				justify-self:center;
+				align-self:center;
+			}
 		</style>
 
 	</head>
@@ -98,8 +117,10 @@
 			<input-matrix class='input-one'></input-matrix>
 			<input-matrix class='input-two'></input-matrix>
 			<output-matrix class='output'></output-matrix>
-		</page-one>
--->
+			<operation-area>
+				<operation-input></operation-input>
+			</operation-area>
+			-->
 	</body>
   <script>
 
@@ -107,17 +128,17 @@
 	const inputMatrix = document.querySelector('input-matrix');
 	const pageOne = document.querySelector('page-one');
 
-	//TARGETS
-	//	'sizeInput',
-	//	'inputMatrixOne',
-	//	'inputMatrixTwo',
-	//	'outputMatrix',
-
-	let STATE = {
+	const STATE = {
 		input:{
 			type:['input-one','input-two'],
-			count:0,
-			whichMatrix:0,
+			sizeCount:0,
+			sizeCountUP: function() {
+				this.sizeCount += 1;
+			},
+			sizeCountReset: function() {
+				this.sizeCount = 0;
+			},
+			matrixCount:0,
 		},
 		inputMatrix: {
 			columns:0,
@@ -131,23 +152,38 @@
 			'output':[],
 			updated:false,
 		},
-		target:'sizeInput',
+		targetArray:[
+			'sizeInput',
+			'inputMatrix',
+			'operation',
+			'outputMatrix',
+		],
+		targetIndex:0,
+		nextTarget: function() {
+			this.targetIndex += 1;
+		},
+		prevTarget:function() {
+			this.targetIndex -= 1;
+		},
+		target: function() {
+			return this.targetArray[this.targetIndex];
+		},
 	}
-
 	document.addEventListener('keydown',event => {
 
-		console.log('current target: ',STATE.target);
+		console.log('current target: ',STATE.target());
 
-		switch(STATE.target){
+		switch(STATE.target()){
 			case 'sizeInput':
 				updateSizeInput(event,'one');
 				break;
-			case 'inputMatrixOne':
-				console.log('this is runinng');
-				updateInputMatrix(event,'input-one');
+			case 'inputMatrix':
+				updateInputMatrix(event,
+					STATE.input.matrixCount? 'input-two' : 'input-one'
+				);
 				break;
-			case 'inputMatrixTwo':
-				updateInputMatrix(event,'input-two');
+			case 'operation':
+				updateOperationInput(event);
 				break;
 			case 'outputMatrix':
 				updateOutputMatrix();
@@ -157,13 +193,29 @@
 
 	function updateSizeInput(event){
 		console.log('size');
-		if(!+event.key)return;
-		let { type, count, whichMatrix } = STATE.input;
-		update(event.key);
-		if(count === 0){
+		let { type, sizeCount, matrixCount } = STATE.input;
+		if( !+event.key || matrixCount > 1)return;
+		//first number plus 'X'
+		console.log('sizeCount!:',sizeCount);
+		if(sizeCount === 0){
+			update(event.key);
 			update('x');
-			console.log('count up 0?',count);
-			STATE.pauseIndex = true;
+			console.log('sizeCount up 0?',sizeCount);
+			STATE.input.sizeCountUP();
+		}
+		//second number + create matrix + target matrix
+		if(sizeCount === 1){
+			update(event.key);
+			createInputMatrix(type,matrixCount);
+			console.log('sizeCount up 1?',sizeCount);
+			STATE.input.sizeCountUP();
+			STATE.nextTarget();
+		}
+		//clear sizeInput
+		if(sizeCount === 2){
+			sizeInput.innerHTML = '';
+			STATE.input.sizeCountReset();
+			console.log('sizeCount up 2',sizeCount);
 		}
 		function update(input){
 			//if(event.key === 'Enter')return;
@@ -171,81 +223,63 @@
 			dimension.innerHTML = input;
 			sizeInput.appendChild(dimension);
 			if(input === 'x')return;
-			STATE.inputMatrix[count ? 'rows' : 'columns'] = input;
-			console.log('inputMatrix',STATE.inputMatrix);
-		}
-		if(count === 1){
-			createInputMatrix(type,whichMatrix);
-			console.log('count up 1?',count);
-			STATE.input.whichMatrix += 1;
-			STATE.target = 'inputMatrixOne';
-		}
-		if(count === 2){
-			createInputMatrix(type,whichMatrix);
-			sizeInput.innerHTML = '';
-			console.log('count up 2',count);
-		}
-	//	if(count === 3){
-	//		update(event.key);
-	//		console.log('count up 3',count)
-	//	}
-	//	if(count === 4){
-	//		update('x');
-	//		console.log('count up 4',count)
-	//	}
-	//	if(count === 5){
-	//		update(event.key);
-	//		console.log('count up 5',count)
-	//	}
-		if(event.key){
-			STATE.input.count += 1;
+			STATE.inputMatrix[sizeCount ? 'rows' : 'columns'] = input;
 		}
 	}
 
-	function createInputMatrix(type,whichMatrix){
+	function createInputMatrix(type,matrixCount){
 		const { columns, rows } = STATE.inputMatrix;
 		const inputMatrix = document.createElement('input-matrix');
-		inputMatrix.setAttribute('class', type[whichMatrix]);
+		inputMatrix.setAttribute('class', type[matrixCount]);
 		inputMatrix.style.gridTemplateRows = `repeat(${rows},1fr)`
 		inputMatrix.style.gridTemplateColumns = `repeat(${columns},1fr)`
 		pageOne.appendChild(inputMatrix);
 	}
 
 	function updateInputMatrix(event,whichInput){
+		console.log('update which: ',whichInput);
 		const { columns, rows } = STATE.inputMatrix;
-		console.log('updateInputMatrix');
     const matrixArray = STATE.inputMatrix[whichInput];
 		const value = document.createElement('value');
+		const matrixOrder = +columns * +rows;
 
 		if(event.key === "Enter")return;	
 	
-		if(matrixArray.length >= +columns * +rows) return;
 		console.log('event key:',event.key);
 
 		value.innerHTML = event.key;
 		matrixArray.push(+event.key);
 		document.getElementsByClassName(whichInput)[0]
 		.appendChild(value);
+		console.log('matrixCount in matrix update: ',STATE.input.matrixCount);
+		if( matrixArray.length === matrixOrder 
+			&& STATE.input.matrixCount < 1 ){
+	    STATE.prevTarget();
+			STATE.input.matrixCount += 1;
+			return;
+		}
+		STATE.input.matrixCount += 1;
+		if( STATE.input.matrixCount === 2 ){
+			console.log('trigger next');
+			STATE.nextTarget();
+			createOperationInput();
+		}
+	}
+	
+	function createOperationInput(){
+		const operationArea = document.createElement('operation-area');
+		pageOne.appendChild(operationArea);
+
+		const operationInput = document.createElement('operation-input');
+		operationArea.appendChild(operationInput);
+
+		const operator = document.createElement('operator');
+		operationInput.appendChild(operator);
 	}
 
-	function updateSizeOutput(){
-	}
-	function updateOutputMatrix(){
-		//[1,3,5,4]
-		addMatrices();
-	}
-	function addMatrices(){
-		const {inputMatrix,outputMatrix} = STATE;
-		for(let i = 0; i < 4; i++){
-			const sum = inputMatrix['input-one'][i] +	
-					inputMatrix['input-two'][i];
-			const value = document.createElement('value');
-			value.innerHTML = sum;
-			outputMatrix['output'].push(sum);
-			document.getElementsByClassName('output')[0]
-			.appendChild(value);
-		}	
-		outputMatrix.updated = true;
+	function updateOperationInput(event){
+		document.getElementsByTagName('operator')[0]
+		.innerHTML = event.key;
 	}
 
   </script>
