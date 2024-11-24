@@ -76,8 +76,10 @@
 				background: #a3a3a3;
 				display: grid;
 				border:1vw solid black;
+				/*
 				id-template-rows: 1fr 1fr;
 				grid-template-columns: 1fr 1fr;
+				*/
 				grid-area: output;
 				justify-self: center;
 			}
@@ -116,7 +118,7 @@
 			<!--
 			<input-matrix class='input-one'></input-matrix>
 			<input-matrix class='input-two'></input-matrix>
-			<output-matrix class='output'></output-matrix>
+			<output-matrix></output-matrix>
 			<operation-area>
 				<operation-input></operation-input>
 			</operation-area>
@@ -150,7 +152,7 @@
 			columns:0,
 			rows:0,
 			'output':[],
-			updated:false,
+			type:'+',
 		},
 		targetArray:[
 			'sizeInput',
@@ -278,8 +280,42 @@
 	}
 
 	function updateOperationInput(event){
-		document.getElementsByTagName('operator')[0]
-		.innerHTML = event.key;
+		document.getElementsByTagName('operator')[0].innerHTML = 
+		event.key
+		STATE.nextTarget();
+		createOutputMatrix(); 
+}
+
+	function createOutputMatrix(){
+		const { columns, rows } = STATE.inputMatrix;
+		const outputMatrix = document.createElement('output-matrix');
+		outputMatrix.style.gridTemplateRows = `repeat(${rows},1fr)`
+		outputMatrix.style.gridTemplateColumns = `repeat(${columns},1fr)`
+		pageOne.appendChild(outputMatrix);
+	}
+
+	function updateOutputMatrix(){
+		const { columns, rows } = STATE.inputMatrix;
+		const { type } = STATE.outputMatrix;
+    const matrixArray = STATE.outputMatrix['output'];
+		const matrixOrder = +columns * +rows;
+	
+		operateOnMatrices('+');
+
+	}
+
+	function operateOnMatrices(mathType){
+	  const inputOne = STATE.inputMatrix['input-one']; 
+		const inputTwo = STATE.inputMatrix['input-two'];
+		const output = [];
+		for(let i = 0; i < inputOne.length;i++){
+			output.push( inputOne[i] + inputTwo[i] );
+			const value = document.createElement('value');
+			value.innerHTML = inputOne[i] + inputTwo[i];
+			document.getElementsByTagName('output-matrix')[0]
+			.appendChild(value);
+		}
+		STATE.outputMatrix['output'];
 	}
 
   </script>
