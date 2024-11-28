@@ -50,6 +50,7 @@ const inputs = {
 	1:{idName:'input-matrix',suffix:'one',},
 	2:{idName:'size-input',action:'clear',},
 	3:{idName:'input-matrix',suffix:'two'},
+	4:{idName:'operator-input',},
 	index : 0,
 	whichMatrix : 0, 
 	advance : function() {
@@ -57,10 +58,14 @@ const inputs = {
 		this.currentElement().focus();
 		this.clear();
 	},
-	matrixFull : function() {
-		if(this.current().idName === 'input-matrix'){
+	submit : function(submission) {
+		//filter submission
+		//put data from matrices into output matrix, call methods
+		//that do operations
+		console.log('submission:',submission);
+	},
+	matrixAdvance : function() {
 			this.whichMatrix += 1;
-		}
 	},
 	current : function() {
 		return this[this.index];
@@ -97,6 +102,9 @@ for( let i = 0; i < form.children.length; i++ ){
 			case 'input-matrix-two':
 				observeMatrix(event);
 			break;
+			case 'operator-input':
+				observeOperator(event);
+			break;
 		}
 		console.log(
 			'\ncurrent event value is: ',event.target.value,
@@ -105,15 +113,14 @@ for( let i = 0; i < form.children.length; i++ ){
 	});
 }
 
-const currentSizeValue = sizeInput[inputs.whichMatrix];
-const currentMatrix = inputMatrices[inputs.whichMatrix];
 
 function observeSizeInput(event){
+	let currentSizeValue = sizeInput[inputs.whichMatrix];
+	let currentMatrix = inputMatrices[inputs.whichMatrix];
 	currentSizeValue = event.target.value;
 	if(currentSizeValue.length > 1){
-		inputMatrices[inputs.whichMatrix].rows = currentSizeValue[0];
-		inputMatrices[inputs.whichMatrix].columns = currentSizeValue[1];
-
+		currentMatrix.rows = currentSizeValue[0];
+		currentMatrix.columns = currentSizeValue[1];
 		inputs.advance();
 	}
 	console.log('sizeInput',sizeInput);
@@ -126,7 +133,21 @@ function observeMatrix(event) {
 	console.log('input matrix order: ',inputMatrix);
 	if(event.target.value.length === inputMatrix.order()){
 		inputs.advance();
-		inputs.matrixFull();
+		inputs.matrixAdvance();
+	}
+}
+
+function observeOperator() {
+	const currentCharacter = event.target.value;
+	const operators = ['+','-','*','/'];
+
+	if(!operators.includes(event.target.value)){
+		event.target.value = ''; 
+	}
+	console.log('currentCharacter',currentCharacter); 
+	if(currentCharacter.length > 0){
+		console.log('submit case'); 
+		inputs.submit(currentCharacter);
 	}
 }
 
