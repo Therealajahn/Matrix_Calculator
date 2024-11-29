@@ -7,19 +7,6 @@ document.addEventListener('DOMContentLoaded',event =>{
 	}
 });
 
-//get all values at once of form
-form.addEventListener('submit',event => {
-  event.preventDefault();
-	const form = event.target;
-	const formValueArray = [];
-	for( let i = 0; i < form.children.length; i++ ){
-		formValueArray.push(form.children[i].value);
-	}
-	//console.log("form: ", event.target);
-	//console.log(formValueArray);
-});
-
-
 ////////////////////DATA STORAGE///////////////////////////////////
 
 const sizeInput = {
@@ -29,20 +16,67 @@ const sizeInput = {
 
 function inputMatrix(whichOne){
 	return {
+		data:[[]],
+		whichOne:whichOne,
 		rows:0,
 		columns:0,
 		order:function(){
 			return +this.rows * +this.columns;
 		},
-		data:[],
-		whichOne:whichOne,
+		rowIndex:0,
+		columnIndex:0,
+		valuesIndex:0,
+		advance : function(){
+			this.valuesIndex += 1;
+			this.columnIndex = this.valuesIndex % +this.columns;
+			if(this.columnIndex === 0){
+				this.data.push([]);
+				this.rowIndex += 1;
+			}
+		},
   }
 }
 
-const inputMatrices = [
-	inputMatrix('one'),
-	inputMatrix('two'),
-]
+const inputMatrices = {
+  0:inputMatrix('one'),
+  1:inputMatrix('two'),
+
+	combine:function(whichOperation){
+		const result = [];
+		for(let i = 0; i < this[0].rows; i++){
+			result.push([]);
+			for(let j = 0; j < this[0].columns; j++){
+				result[i][j] = 
+					this.operation(
+						whichOperation,
+						this[0].data,
+						this[1].data,
+						i,
+						j,
+					);
+			}
+		}
+		return result;
+	},
+	operation:function(whichOperation,valueOne,valueTwo,i,j){
+		switch (whichOperation) {
+			case '+':
+				return valueOne[i][j] + valueTwo[i][j];	
+				break;
+			case '-':
+				return valueOne[i][j] - valueTwo[i][j];
+				break;
+			case '*':
+				multiply();
+				break;
+		}
+		function multiply(){
+			if(valueOne.columns !== valueTwo.rows)return;
+			let outputMatrixOrder = 
+				valueOne.columns * valueTwo.rows;	
+		}
+	},
+}
 	
 
 const inputs = {
@@ -51,21 +85,14 @@ const inputs = {
 	2:{idName:'size-input',action:'clear',},
 	3:{idName:'input-matrix',suffix:'two'},
 	4:{idName:'operator-input',},
+	5:{idName:'output-matrix',action:'simulate'},
+
 	index : 0,
-	whichMatrix : 0, 
 	advance : function() {
 		this.index += 1;
 		this.currentElement().focus();
 		this.clear();
-	},
-	submit : function(submission) {
-		//filter submission
-		//put data from matrices into output matrix, call methods
-		//that do operations
-		console.log('submission:',submission);
-	},
-	matrixAdvance : function() {
-			this.whichMatrix += 1;
+		this.simulate();
 	},
 	current : function() {
 		return this[this.index];
@@ -77,14 +104,31 @@ const inputs = {
 		}
 		return document.getElementById(this.current().idName);
 	},
+	whichMatrix : 0, 
+	matrixAdvance : function() {
+			this.whichMatrix += 1;
+	},
 	clear : function() {
 		if(inputs.current().action === 'clear'){
 			this.currentElement().value = ''; 
 		}
 	},
+	submit : function(submission) {
+		//filter submission
+		//put data from matrices into output matrix, call methods
+		//that do operations
+		console.log('submission:',submission);
+	},
+	simulate : function() {
+		if(this.current().action === 'simulate'){
+			const simulateInput = new Event('input');
+			this.currentElement().value = ' '; 
+			this.currentElement().dispatchEvent(simulateInput);
+		}
+	},
 	initialize : function() {
 			this.currentElement().focus();
-	}
+	},
 }
 inputs.initialize();
 ////////////////////DATA STORAGE///////////////////////////////////
@@ -100,10 +144,13 @@ for( let i = 0; i < form.children.length; i++ ){
 			break;
 			case 'input-matrix-one':
 			case 'input-matrix-two':
-				observeMatrix(event);
+				observeInputMatrix(event);
 			break;
 			case 'operator-input':
 				observeOperator(event);
+			break;
+			case 'output-matrix':
+				observeOutputMatrix(event);
 			break;
 		}
 		console.log(
@@ -116,7 +163,7 @@ for( let i = 0; i < form.children.length; i++ ){
 
 function observeSizeInput(event){
 	let currentSizeValue = sizeInput[inputs.whichMatrix];
-	let currentMatrix = inputMatrices[inputs.whichMatrix];
+	const currentMatrix = inputMatrices[inputs.whichMatrix];
 	currentSizeValue = event.target.value;
 	if(currentSizeValue.length > 1){
 		currentMatrix.rows = currentSizeValue[0];
@@ -127,52 +174,34 @@ function observeSizeInput(event){
 	console.log('current matrix updated?',inputMatrices[inputs.whichMatrix]);
 }
 
-function observeMatrix(event) {
+function observeInputMatrix(event) {
 	const inputMatrix = inputMatrices[inputs.whichMatrix];
-	console.log('inputs:',inputs); 
-	console.log('input matrix order: ',inputMatrix);
+	const { rows, columns, data, rowIndex, columnIndex } = inputMatrix;
+	inputMatrix.data[rowIndex][columnIndex] = 
+		+event.target.value[(2 * rowIndex) + columnIndex];
+
+	inputMatrix.advance();
+	console.table(inputMatrix);
 	if(event.target.value.length === inputMatrix.order()){
 		inputs.advance();
 		inputs.matrixAdvance();
 	}
 }
 
-function observeOperator() {
+function observeOperator(event) {
 	const currentCharacter = event.target.value;
 	const operators = ['+','-','*','/'];
 
 	if(!operators.includes(event.target.value)){
 		event.target.value = ''; 
 	}
-	console.log('currentCharacter',currentCharacter); 
 	if(currentCharacter.length > 0){
-		console.log('submit case'); 
 		inputs.submit(currentCharacter);
+		inputs.advance();
 	}
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+function observeOutputMatrix(event) {
+	//console.log('output: ',inputMatrices[0].data);
+	//event.target.value = inputMatrices[0].data.join('');
+};
