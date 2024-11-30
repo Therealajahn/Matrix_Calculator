@@ -20,7 +20,7 @@ function inputMatrix(whichOne){
 		whichOne:whichOne,
 		rows:0,
 		columns:0,
-		order:function(){
+		order : function(){
 			return +this.rows * +this.columns;
 		},
 		rowIndex:0,
@@ -41,40 +41,68 @@ const inputMatrices = {
   0:inputMatrix('one'),
   1:inputMatrix('two'),
 
-	combine:function(whichOperation){
+	combine : function(whichOperation){
+		if(whichOperation === '*' || whichOperation === '/'){
+			switch(whichOperation){
+				case '*':
+					this.multiply(this[0].data,this[1].data);
+					break;
+				case '/':
+					this.multiplyByFraction(this[0].data,this[1].data);
+					break;
+			}
+			return;
+		}
+
 		const result = [];
+
 		for(let i = 0; i < this[0].rows; i++){
 			result.push([]);
 			for(let j = 0; j < this[0].columns; j++){
 				result[i][j] = 
 					this.operation(
 						whichOperation,
-						this[0].data,
-						this[1].data,
-						i,
-						j,
+						this[0].data[i][j],
+						this[1].data[i][j],
 					);
 			}
 		}
 		return result;
 	},
-	operation:function(whichOperation,valueOne,valueTwo,i,j){
+	operation : function(whichOperation,valueOne,valueTwo,i,j){
 		switch (whichOperation) {
 			case '+':
-				return valueOne[i][j] + valueTwo[i][j];	
+				return valueOne + valueTwo;	
 				break;
 			case '-':
-				return valueOne[i][j] - valueTwo[i][j];
-				break;
-			case '*':
-				multiply();
+				return valueOne - valueTwo;
 				break;
 		}
-		function multiply(){
-			if(valueOne.columns !== valueTwo.rows)return;
-			let outputMatrixOrder = 
-				valueOne.columns * valueTwo.rows;	
+	},
+	multiply : function (matrixOne,matrixTwo){
+			if(matrixOne.columns !== matrixTwo.rows){
+				throw new Error('These matrices need to have matching opposite dimensions to be multiplied!');
+			  return; 
+			};
+
+			const outputMatrixOrder = 
+				matrixOne.rows * matrixTwo.columns;	
+			const outputMatrix = [];		
+
+		for(let i = 0; i < outputMatrixOrder; i++){
+			const row = i % matrixOne.rows;
+			if(row === 0){
+				outputMatrix.push([]);
+			}
+			for (let column = 0; column < matrixOne.columns; column++) {
+				console.log(`row: ${row}, col: ${column}`);
+				outputMatrix[row][column] = 
+					matrixOne[row][column] * matrixTwo[column][row];
+			}			
 		}
+		return outputMatrix;
+	},
+	multiplyByFraction : function (){
 	},
 }
 	
